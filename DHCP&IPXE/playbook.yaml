@@ -7,6 +7,10 @@
 
     #sudo apt update && sudo apt install isc-dhcp-server
     - name: Install DHCP Packages
+      ansible.builtin.apt: 
+        name: 
+          - isc-dhcp-server
+        state: present
     
     #Basic DHCP config setup
     - name: Configure DHCP
