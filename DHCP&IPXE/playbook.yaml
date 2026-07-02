@@ -1,0 +1,43 @@
+---
+- name: DHCP Server Configuration
+  hosts: DHCP
+  become: true
+
+  tasks:
+
+    #sudo apt update && sudo apt install isc-dhcp-server
+    - name: Install DHCP Packages
+    
+    #Basic DHCP config setup
+    - name: Configure DHCP
+      ansible.builtin.copy: 
+        dest: /etc/DHCP/dhcpd.conf
+        content: |
+          subnet 192.168.1.0 netmask 255.255.255.0 {
+            range 192.168.1.50 192.168.1.100;
+            option routers 192.168.1.1;
+            option domain-name-servers 192.168.1.1;
+            ...
+          }
+    
+    # sudo apt install tftpd-hpa  | sudo dnf install tftp-server
+    - name: Install TFTP Packages
+
+    #sudo mkdir -p /var/lib/tftpboot.
+    - name: Create TFTP root directory
+      ansible.builtin.file:
+        name: /var/lib/tftpboot
+        state: present
+        directory: true
+        mode: 755
+
+    # Setup PXELinux Configuration
+    # mkdir -p /var/lib/tftpboot/pxelinux.cfg
+    - name: Create PXELinux Configuration
+      ansible.builtin.file: 
+        name: /var/lib/tftpboot/pxelinux.cfg
+        state: present
+        directory: true
+        mode: 755
+
+    
