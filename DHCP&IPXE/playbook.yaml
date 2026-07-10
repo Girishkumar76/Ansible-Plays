@@ -10,6 +10,8 @@
       ansible.builtin.apt: 
         name: 
           - isc-dhcp-server
+          - apache2
+          - tftpd-hpa
         state: present
     
     #Basic DHCP config setup
@@ -18,13 +20,6 @@
         dest: /etc/DHCP/dhcpd.conf
         src: dhcpd.conf.j2
     
-    # sudo apt install tftpd-hpa  | sudo dnf install tftp-server
-    - name: Install TFTP Packages
-      ansible.builtin.apt: 
-        name: 
-          - tftpd-hpa
-        state: present
-
     #sudo mkdir -p /var/lib/tftpboot.
     - name: Create TFTP root directory
       ansible.builtin.file:
@@ -42,12 +37,6 @@
       ansible.builtin.get_url:
         url: https://boot.ipxe.org/{{ item }}
         dest: /srv/tftp/{{ item }}
-
-    - name: Install Apache Web Server
-      ansible.builtin.apt: 
-        name: 
-          - apache2
-        state: present
 
     # Preparation of Webserver root for  Alpine Linux ISO for PXE Booting
     - name: Create Web Alpine Directory
