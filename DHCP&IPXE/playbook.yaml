@@ -4,7 +4,6 @@
   become: true
 
   tasks:
-
     #sudo apt update && sudo apt install isc-dhcp-server
     - name: Install DHCP Packages
       ansible.builtin.apt: 
@@ -50,28 +49,6 @@
       ansible.builtin.template:
         dest: /var/www/html/boot.ipxe
         src: templates/boot.ipxe.j2
-
-    # Downloading the default Alpine Linux for PXE Booting
-    - name: Download Alpine Linux ISO
-      loop:
-        - vmlinuz-lts
-        - initramfs-lts
-        - modloop-lts
-      ansible.builtin.get_url:
-        url: https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/netboot/{{ item }}
-        dest: /var/www/html/{{ item }}
-
-    # Copy custom Alpine Linux image creation script to the server
-    - name: Create Custom Alpine Linux Image
-      ansible.builtin.copy:
-        src: create-alpine-packer-gemini-script.sh
-        dest: /root/create-alpine-packer-gemini-script.sh
-      
-    # Run the script to create the custom Alpine Linux image
-    - name: Execute Custom Alpine Linux Image Creation Script
-      ansible.builtin.shell: bash /root/create-alpine-packer-gemini-script.sh
-      args:
-        chdir: /root
 
     # enable and restart all the services
     - name: Enable and Restart DHCP, Apache2, TFPTD
