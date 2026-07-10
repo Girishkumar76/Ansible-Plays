@@ -4,9 +4,10 @@
   become: true
 
   tasks:
-    #sudo apt update && sudo apt install isc-dhcp-server
+    # update the apt cache and install the required packages
     - name: Install DHCP Packages
       ansible.builtin.apt: 
+        update_cache: yes
         name: 
           - isc-dhcp-server
           - apache2
@@ -36,7 +37,7 @@
       ansible.builtin.file:
         name: /srv/tftp
         state: directory
-        mode: 755
+        mode: '755'
         owner: tftp
         group: tftp
 
@@ -48,27 +49,27 @@
       ansible.builtin.get_url:
         url: https://boot.ipxe.org/{{ item }}
         dest: /srv/tftp/{{ item }}
-      notify: update TFTPD configuration
+      #disabled till further notice#notify: update TFTPD configuration
 
     # Preparation of Webserver root for  Alpine Linux ISO for PXE Booting
     - name: Create Web Alpine Directory
       ansible.builtin.file: 
         name: /var/www/html/alpine
         state: directory
-        mode: 755
+        mode: '755'
     
     # Create IPXE Boot Script
     - name: Create iPXE Boot Script
-      notify: update apache2 configuration
+      #disabled till further notice#notify: update apache2 configuration
       ansible.builtin.template:
         dest: /var/www/html/boot.ipxe
         src: templates/boot.ipxe.j2
 
-    # Create Alpine Linux image
     # Prepare Boot images
     - name: Prepare Boot images
       block:
       - name: Prepare Alpine Linux Image
+        notify: update apache2 configuration
         ansible.builtin.include_role:
           name: alpine-gemini-script
 
