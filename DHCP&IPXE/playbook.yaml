@@ -12,14 +12,26 @@
           - apache2
           - tftpd-hpa
         state: present
-    
+
+    # enable and restart all the services
+    - name: Enable and Restart DHCP, Apache2, TFPTD with default configuration
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - isc-dhcp-server
+        - apache2
+        - tftpd-hpa
+
     #Basic DHCP config setup
     - name: Configure DHCP
+      notify: update DHCP configuration
       ansible.builtin.template: 
-        dest: /etc/DHCP/dhcpd.conf
+        dest: /etc/dhcp/dhcpd.conf
         src: templates/dhcpd.conf.j2
     
-    #sudo mkdir -p /var/lib/tftpboot.
+    #Ensure tftpd directory
     - name: Create TFTP root directory
       ansible.builtin.file:
         name: /srv/tftp
@@ -36,6 +48,7 @@
       ansible.builtin.get_url:
         url: https://boot.ipxe.org/{{ item }}
         dest: /srv/tftp/{{ item }}
+      notify: update TFPTD configuration
 
     # Preparation of Webserver root for  Alpine Linux ISO for PXE Booting
     - name: Create Web Alpine Directory
@@ -50,13 +63,19 @@
         dest: /var/www/html/boot.ipxe
         src: templates/boot.ipxe.j2
 
-    # enable and restart all the services
-    - name: Enable and Restart DHCP, Apache2, TFPTD
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        enabled: true
+    # Create Alpine Linux image
+    - name: Prepare Alpine Linux Image
+      ansible.builtin.include_role:
+        name: alpine-gemini-script
+
+### Handlers
+  handlers:
+    - name : update TFPTD configuration
+      ansible.builtin.service:
+        name: tftpd-hpa
         state: restarted
-      loop:
-        - isc-dhcp-server
-        - apache2
-        - tftpd-hpa
+
+    - name : update DHCP configuration
+      ansible.builtin.service:
+        name: isc-dhcp-server 
+        state: restarted
