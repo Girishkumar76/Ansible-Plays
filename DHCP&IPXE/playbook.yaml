@@ -16,9 +16,9 @@
     
     #Basic DHCP config setup
     - name: Configure DHCP
-      ansible.builtin.copy: 
+      ansible.builtin.template: 
         dest: /etc/DHCP/dhcpd.conf
-        src: dhcpd.conf.j2
+        src: templates/dhcpd.conf.j2
     
     #sudo mkdir -p /var/lib/tftpboot.
     - name: Create TFTP root directory
@@ -47,9 +47,9 @@
     
     # Create IPXE Boot Script
     - name: Create iPXE Boot Script
-      ansible.builtin.copy:
+      ansible.builtin.template:
         dest: /var/www/html/boot.ipxe
-        src: boot.ipxe.j2
+        src: templates/boot.ipxe.j2
 
     # Downloading the default Alpine Linux for PXE Booting
     - name: Download Alpine Linux ISO
