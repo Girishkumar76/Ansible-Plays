@@ -1,0 +1,18 @@
+#!ipxe
+
+echo =========================================
+echo Starting Alpine Linux Lab Environment...
+echo =========================================
+
+set server_ip 172.168.141.10
+set base-url http://${server_ip}/alpine
+
+# Boot parameters:
+# - ip=dhcp: Tells Alpine to configure networking
+# - alpine_repo: Points to the official packages so it can install software
+# - apkovl: Points to the custom configuration overlay we are about to build!
+# - hostname: Gives your VM a name for the greeting.
+
+kernel ${base-url}/vmlinuz-lts ip=dhcp alpine_repo=https://dl-cdn.alpinelinux.org/alpine/v3.19/main/ modloop=${base-url}/modloop-lts apkovl=http://${server_ip}/alpine.apkovl.tar.gz hostname=ipxe-lab-vm
+initrd ${base-url}/initramfs-lts
+boot
