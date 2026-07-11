@@ -1,13 +1,17 @@
 ---
-- name: DHCP Server Configuration
-  hosts: DHCP
+- name: DCHP and iPXE Server Setup
+  hosts: DHCPiPXE
   become: true
+  #todo create vars for the dhcp and ipxe configs to avoid hardcoding
+  #vars_files:
+  #  - vars/dhcp-vars.yaml
+  #  - vars/ipxe-vars.yaml
 
   tasks:
     # update the apt cache and install the required packages
     - name: Install DHCP Packages
       ansible.builtin.apt: 
-        update_cache: yes
+        update_cache: true
         name: 
           - isc-dhcp-server
           - apache2
@@ -35,7 +39,7 @@
     #Ensure tftpd directory
     - name: Create TFTP root directory
       ansible.builtin.file:
-        name: /srv/tftp
+        path: /srv/tftp
         state: directory
         mode: '755'
         owner: tftp
@@ -45,7 +49,7 @@
     - name: Download iPXE binary
       loop: 
         - undionly.kpxe
-        - ipxe.efi
+        - x86_64-efi/ipxe.efi
       ansible.builtin.get_url:
         url: https://boot.ipxe.org/{{ item }}
         dest: /srv/tftp/{{ item }}
@@ -68,8 +72,9 @@
     # Prepare Boot images
     - name: Prepare Boot images
       block:
+      ## To add more boot images, add them to the list below and create a template for them in the templates directory
       - name: Prepare Alpine Linux Image
-        notify: update apache2 configuration
+        #Disabled#  notify: update apache2 configuration
         ansible.builtin.include_role:
           name: alpine-gemini-script
 

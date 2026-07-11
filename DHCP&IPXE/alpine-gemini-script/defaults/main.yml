@@ -1,4 +1,4 @@
 ---
 # defaults file for alpine-gemini-script
-alpine_version: "3.18"
+alpine_version: "v3.19"
 alpine_arch: "x86_64"
