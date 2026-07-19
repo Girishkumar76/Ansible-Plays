@@ -1,0 +1,11 @@
+---
+- name: Playbook list out the current ansible facts for the host before running the main playbook
+  hosts: DHCPiPXE
+  become: true
+
+  tasks:
+
+  - name: Display ansible facts
+    ansible.builtin.debug:
+      var: ansible_facts
+  

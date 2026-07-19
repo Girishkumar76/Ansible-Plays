@@ -1,14 +1,14 @@
-subnet 172.168.141.0 netmask 255.255.255.0 {
-    range 172.168.141.100 172.168.141.200;
-    option routers 172.168.141.10;
+subnet {{ network_id }} netmask {{ subnet_mask }} {
+    range {{ dhcp_range_start }} {{ dhcp_range_end }};
+    option routers {{ gateway }};
     #option domain-name-servers 8.8.8.8, 1.1.1.1;
-    option domain-name-servers 172.168.141.10;
-    option broadcast-address 172.168.141.255;
+    option domain-name-servers {{ dns_servers | join(', ') }};
+    option broadcast-address {{ broadcast }};
 
     # Chainloading Logic
     if exists user-class and option user-class = "iPXE" {
         # If the client is already running iPXE, give it the boot script via HTTP
-        filename "http://172.168.141.10/boot.ipxe";
+        filename "http://{{ ipxe_server }}/boot.ipxe";
     } else {
         # If the client is a standard PXE BIOS/UEFI, give it the iPXE binary via TFTP
         # Note: We are using the UEFI binary here. If your VM is legacy BIOS, use undionly.kpxe

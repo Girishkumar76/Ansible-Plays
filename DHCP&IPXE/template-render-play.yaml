@@ -1,0 +1,11 @@
+---
+- name: Playbook to test jinja2 templates before running the main playbook
+  hosts: DHCPiPXE
+  become: true
+
+  tasks:
+
+  - name: Render DHCP template
+    ansible.builtin.template:
+      src: templates/dhcpd.conf.j2
+      dest: "/tmp/dhcpd.conf-{{ ansible_facts['date_time']['epoch_int']}}"
