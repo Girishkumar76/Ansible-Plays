@@ -1,0 +1,55 @@
+#Step 1: Install the required packages
+sudo apt update
+sudo apt install bind9 bind9utils bind9-doc dnsutils iptables-persistent -y
+
+# Step 2: Allow ipv4 forwarding
+sudo nano /etc/sysctl.conf
+net.ipv4.ip_forward=1
+sudo sysctl -p
+
+# Step 3: iptables config
+# Masquerade traffic leaving ens33
+sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+
+# Allow forwarding from LAN to WAN
+sudo iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
+
+# Allow returning traffic for established connections
+sudo iptables -A FORWARD -i ens33 -o ens37 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+#Step 4: Save iptables rules
+sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+
+#Step 5: free port 53 from systemd-resolved
+sudo nano /etc/systemd/resolved.conf
+DNSStubListener=no
+sudo systemctl restart systemd-resolved
+
+#Step 6: Configure and start bind9 service
+sudo nano /etc/bind/named.conf.options
+
+acl "trusted" {
+  127.0.0.0/8;
+  172.168.141.0/24;
+};
+
+options {
+  directory "var/cache/bind";
+
+  recursion yes;
+  allow-query { trusted; };
+
+  forwarders {
+    8.8.8.8
+    1.1.1.1
+  }
+
+  forward only;
+
+  dnssec-validation auto;
+  listen-on-v6 { any; };
+};
+
+systemctl restart bind9
+systemctl enable bind9
+

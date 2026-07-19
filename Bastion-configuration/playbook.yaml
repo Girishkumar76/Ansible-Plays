@@ -1,0 +1,97 @@
+---
+- name: Configure Bastion Host
+  hosts: Bastion
+  become: true
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install required packages
+      apt:
+        name:
+          - bind9 
+          - bind9utils 
+          - bind9-doc 
+          - dnsutils 
+          - iptables-persistent
+        state: present
+
+    - name: Enable IPv4 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: true
+        state: present
+        reload: true
+    
+    # sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+    - name: Configure iptables for NAT
+      ansible.builtin.iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: ens33
+        jump: MASQUERADE
+        state: present
+      notify: Save iptables rules
+
+    # sudo iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
+    - name: Allow forwarding from LAN to WAN (local network to external network)
+      ansible.builtin.iptables:
+        chain: FORWARD
+        in_interface: ens37
+        out_interface: ens33
+        jump: ACCEPT
+        state: present
+      notify: Save iptables rules
+    
+    # sudo iptables -A FORWARD -i ens33 -o ens37 -m state --state RELATED,ESTABLISHED -j ACCEPT
+    - name: Allow returning traffic for established connections
+      ansible.builtin.iptables:
+        chain: FORWARD
+        in_interface: ens33
+        out_interface: ens37
+        match: state
+        state: RELATED,ESTABLISHED
+        jump: ACCEPT
+        state: present
+      notify: Save iptables rules
+
+
+    ######Free port 53 on ubuntu
+    - name: Add override file for systemd-resolved to free port 53
+      copy:
+        dest: /etc/systemd/resolved.conf.d/override-DNSStubListener.conf
+        content: |
+          [Resolve]
+          DNSStubListener=no
+      notify: Restart systemd-resolved
+
+    ##### Configure BIND9 dns
+    - name: Configure BIND9 DNS server
+      ansible.builtin.template:
+        src: templates/named.conf.options.j2
+        dest: /etc/bind/named.conf.options/forwarder.option
+      notify: Restart BIND9 service
+    
+    - name: Start and enable BIND9 service
+      ansible.builtin.service:
+        name: bind9
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Save iptables rules
+      ansible.builtin.command: iptables-save > /etc/iptables/rules.v4
+
+    - name: Restart systemd-resolved
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: restarted  
+
+    - name: Restart BIND9 service 
+      ansible.builtin.service:
+        name: bind9
+        state: restarted
+        
