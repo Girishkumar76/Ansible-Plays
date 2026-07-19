@@ -1,6 +1,9 @@
 Version: 0.0
 Log: Created changes log for Ansible-Plays
 TODO:
-  - Convert DHCP template to use variables from dhcp-vars.yaml
-  - Create vars file for IPXE template(boot.ipxe.j2) and convert template to use variables from that file
-  - Create Ansible playbook or router to configure linux router.
+  - name: Convert DHCP template to use variables from dhcp-vars.yaml
+    status: done
+  - name: Create vars file for IPXE template(boot.ipxe.j2) and convert template to use variables from that file
+    status: pending
+  - name: Create Ansible playbook or router to configure linux router.
+    status: pending

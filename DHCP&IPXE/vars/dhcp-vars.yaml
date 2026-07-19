@@ -2,7 +2,8 @@ network_id: 172.168.141.0
 subnet_mask: 255.255.255.0
 dhcp_range_start: 172.168.141.100
 dhcp_range_end: 172.168.141.200
-gateway: 172.168.141
+gateway: 172.168.141.10
+broadcast: 172.168.141.255
 dns_servers:
   - 172.168.141.10
 ipxe_server: 172.168.141.10
