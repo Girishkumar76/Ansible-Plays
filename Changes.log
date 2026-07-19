@@ -1,3 +1,4 @@
+
 Version: 0.0
 Log: Created changes log for Ansible-Plays
 TODO:
@@ -7,3 +8,8 @@ TODO:
     status: pending
   - name: Create Ansible playbook or router to configure linux router.
     status: pending
+    progress:
+      - created the basic playbook structure
+      - sop added
+      - need to create template and vars files
+      - Optional: convert it to role
