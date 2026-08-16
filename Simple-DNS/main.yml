@@ -1,0 +1,93 @@
+---
+- name: Simple DNS Configuration
+  hosts: localhost #SimpleDNS
+  remote_user: root
+  gather_facts: false
+  
+  tasks:
+    - name: Install Bind9 package
+      ansible.builtin.apt:
+        name:
+          - bind9
+          - dnsutils
+        state: latest
+        #update_cache: true
+
+    #- name: Setup Named configuration file
+    #  ansible.builtin.blockinfile:
+    #    path: /etc/bind/named.conf.options
+    #    append_newline: true
+    #    prepend_newline: true
+    #    block: |
+    #      options {
+    #        directory "/var/cache/bind";
+    #        forwarders {
+    #          8.8.8.8;
+    #          1.1.1.1;
+    #        };
+    #      };
+
+    - name: Setup Zone configuration file
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.local
+        append_newline: true
+        prepend_newline: true
+        block: |
+          zone "gkp.local" {
+            type master;
+            file "/etc/bind/zones-gkp.local.db";
+          };
+          zone "241.168.192.in-addr.arpa" {
+            type master;
+            file "/etc/bind/zones-241.db";
+          };
+
+
+    #- name: Create Reverse Zone configuration file
+    #  ansible.builtin.blockinfile:
+    #    path: /etc/bind/named.conf.local
+    #    append_newline: true
+    #    prepend_newline: true
+    #    block: |
+    #      zone "241.168.192.in-addr.arpa" {
+    #        type master;
+    #        file "/etc/bind/zones/241.db";
+    #      };
+    
+    - name: Create Zone file for gkp.local
+      ansible.builtin.copy:
+        dest: /etc/bind/zones-gkp.local.db
+        content: |
+          $TTL    604800
+          @       IN      SOA     ns1.gkp.local. admin.gkp.local. (
+                                2024042701         ; Serial
+                                604800             ; Refresh
+                                86400              ; Retry
+                                2419200            ; Expire
+                                604800 )           ; Negative Cache TTL
+          ;
+          @       IN      NS      ns1.gkp.local.
+          ns1     IN      A       192.168.241.131
+          domain-controler-01  IN      A  192.168.241.131
+
+    - name: Create Reverse Zone file for 192.168.241.x
+      ansible.builtin.copy:
+        dest: /etc/bind/zones-241.db
+        content: |
+          $TTL    604800
+          @       IN      SOA     ns1.gkp.local. admin.gkp.local. (
+                                2024042701         ; Serial
+                                604800             ; Refresh
+                                86400              ; Retry
+                                2419200            ; Expire
+                                604800 )           ; Negative Cache TTL
+          ;
+          @       IN      NS      ns1.gkp.local.
+          131     IN      PTR     domain-controler-01.gkp.local.
+
+    - name: Restart Bind9 service
+      ansible.builtin.service:
+        name: bind9
+        state: restarted
+
+

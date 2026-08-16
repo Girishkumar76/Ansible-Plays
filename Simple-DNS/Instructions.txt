@@ -1,0 +1,11 @@
+Instructions:
+1. Install and Configure DNS
+
+
+Learnings
+1. To add custom dns while systemd-resolved
+    i. resolvectl dns <interface> <IP>
+    ii. resolvectl domain <interface> <domain>
+2. When using ansible.builtin.blockinfile module remember that there can only be one ansible managed block in a file at a time
+3. Remember to check the files which you have edited
+4. use named-checkconf

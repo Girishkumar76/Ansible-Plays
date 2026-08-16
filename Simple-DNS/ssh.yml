@@ -1,0 +1,16 @@
+---
+- name: Simple DNS Configuration
+  hosts: localhost #SimpleDNS
+  #remote_user: root
+  become: true
+  become_method: sudo
+  gather_facts: false
+  
+  tasks:
+    - name: whoami
+      ansible.builtin.command: whoami
+      register: whoami_output
+
+    - name: Print whoami output
+      ansible.builtin.debug:
+        msg: "The current user is: {{ whoami_output.stdout }}"
