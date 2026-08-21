@@ -1,0 +1,56 @@
+---
+- name: Ubuntu Lab Setup
+  hosts: localhost
+  become: true
+
+  tasks:
+    # Install required packages
+    - name: Install required packages
+      apt:
+        name:
+          - git
+          - curl
+          - vim
+          - htop
+          - tmux
+          - sshpass
+        state: present
+        update_cache: yes
+    
+    # create required user
+    - name: Create required user
+      user:
+        name: labuser
+        comment: Lab User
+        shell: /bin/bash
+        state: present
+        password: "{{ 'labpassword' | password_hash('sha512') }}"
+        update_password: on_create
+
+    
+    # Create password for the user
+    - name: Set password for root
+      user:
+        name: root
+        password: "{{ 'rootpassword' | password_hash('sha512') }}"
+        update_password: always
+        
+        
+    # setup sudo access for the user
+    - name: Setup sudo access for the user
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/01-labuser
+        content: "labuser ALL=(ALL) NOPASSWD:ALL"
+        owner: root
+        group: root
+        mode: '0440'
+
+    # allow password ssh
+    - name: Allow password authentication for SSH
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/20-password-auth
+        content: |
+          PasswordAuthentication yes
+        user: root
+        group: root
+        mode: 0600
