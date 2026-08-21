@@ -1,0 +1,20 @@
+---
+- name: Playbook list out the current ansible facts for the host before running the main playbook
+  hosts: localhost
+  become: true
+  vars:
+    ansible_connection: ssh
+    ansible_user: vagrant
+    ansible_ssh_pass: vagrant
+
+  tasks:
+
+  - name: Display ansible facts
+    ansible.builtin.debug:
+      var: ansible_facts
+
+  - name: save to file with timestamp(date and epoch)
+    ansible.builtin.copy:
+      dest: /tmp/ansible_facts_{{ ansible_date_time.date }}_{{ ansible_date_time.epoch}}_log.json
+      content: "{{ ansible_facts | to_nice_json }}"
+  
