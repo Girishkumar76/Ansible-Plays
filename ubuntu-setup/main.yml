@@ -2,6 +2,9 @@
 - name: Ubuntu Lab Setup
   hosts: localhost
   become: true
+  vars:
+    change_flags:
+      #update_root: true
 
   tasks:
     # Install required packages
@@ -14,7 +17,8 @@
           - htop
           - tmux
           - sshpass
-        state: present
+          - net-tools
+        state: latest
         update_cache: yes
     
     # create required user
@@ -30,6 +34,7 @@
     
     # Create password for the user
     - name: Set password for root
+      when: change_flags.update_root | default(false)
       user:
         name: root
         password: "{{ 'rootpassword' | password_hash('sha512') }}"
@@ -39,18 +44,43 @@
     # setup sudo access for the user
     - name: Setup sudo access for the user
       ansible.builtin.copy:
-        dest: /etc/sudoers.d/01-labuser
-        content: "labuser ALL=(ALL) NOPASSWD:ALL"
+        dest: /etc/sudoers.d/20-labuser
+        content: "labuser ALL=(ALL) NOPASSWD:ALL\n"
         owner: root
         group: root
         mode: '0440'
 
     # allow password ssh
     - name: Allow password authentication for SSH
-      ansible.builtin.copy:
-        dest: /etc/ssh/sshd_config.d/20-password-auth
-        content: |
-          PasswordAuthentication yes
-        user: root
+      notify: restart ssh
+      ansible.builtin.lineinfile:
+        create: true
+        state: present
+        path: /etc/ssh/sshd_config.d/20-password-auth
+        line: PasswordAuthentication yes
+        owner: root
         group: root
-        mode: 0600
+        mode: '0600'
+   
+
+  
+   # setup vimrc for the user
+    - name: Setup vimrc for the user
+      ansible.builtin.blockinfile:
+        path: /home/labuser/.vimrc
+        block: |
+          set number
+          set cuc
+          set mouse-=a
+        owner: labuser
+        group: labuser
+        mode: '0644'
+        state: present
+        create: true
+
+  #restart ssh service
+  handlers:
+    - name: restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
